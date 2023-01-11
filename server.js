@@ -1,18 +1,20 @@
  import express from "express";
 import http from "http";
-import cors from "cors";
 import "dotenv/config";
 import { Server } from "socket.io";
 
 const app = express();
 const server = http.createServer(app);
-const io = new Server(server);
- 
+const io = new Server(server, {
+  cors: {
+    origin: process.env.ORIGIN,
+    methods: ["GET", "POST"]
+  }
+});
+
 const port = process.env.PORT || 8080;
 const teams = [];
 const buzzes = [];
-
-app.use(cors({ origin: "https://lne0nl.github.io/" }));
 
 io.on("connect", (socket) => {
   console.log(`user ${socket.id} connected`);
@@ -35,4 +37,4 @@ io.on("connect", (socket) => {
   })
 });
 
-server.listen(port, () => console.log(`Running server on port ${port}`));
+server.listen(port, () => console.log(`Running server on port ${port} with origin ${process.env.ORIGIN}`));
