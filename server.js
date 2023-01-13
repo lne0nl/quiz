@@ -13,13 +13,15 @@ const io = new Server(server, {
 });
 
 const port = process.env.PORT || 8080;
-const teams = [];
-const buzzes = [];
+let teams = [];
+let buzzes = [];
+let title = "";
 
 io.on("connect", (socket) => {
   console.log(`user ${socket.id} connected`);
 
   io.emit("team-added", teams);
+  if (title) io.emit("title", title);
 
   socket.on("add-team", (team) => {
     teams.push(team);
@@ -30,11 +32,39 @@ io.on("connect", (socket) => {
   socket.on("buzz", (teamName) => {
     if (!buzzes.includes(teamName)) buzzes.push(teamName);
     if (buzzes.length >= 1) io.emit("buzz-win", buzzes[0]);
-    console.log(buzzes.length)
-
     console.log(`l'équipe ${teamName} a buzzé !`)
-    console.log(buzzes)
+  });
+
+  socket.on("raz-buzz", () => {
+    buzzes = [];
+    io.emit("raz-buzz");
+  });
+
+  socket.on("add-point", (teamName) => {
+    teams.find((o) => {
+      if (o.name === teamName) o.score += 1;
+    });
+    io.emit("add-point", teamName);
+  });
+
+  socket.on("remove-point", (teamName) => {
+    teams.find((o) => {
+      if (o.name === teamName) o.score -= 1;
+    });
+    io.emit("remove-point", teamName);
+  });
+
+  socket.on("quiz-name", (quizName) => {
+    title = quizName;
+    io.emit("quiz-name", quizName);
+  });
+
+  socket.on("raz", () => {
+    teams = [];
+    title = "";
+    buzzes = [];
+    io.emit("raz");
   })
 });
 
-server.listen(port, () => console.log(`Running server on port ${port} with origin ${process.env.ORIGIN}`));
+server.listen(port, () => console.log(`Running server on port ${port}`));
