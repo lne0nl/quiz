@@ -18,12 +18,14 @@ let buzzes = [];
 let title = "";
 
 io.on("connect", (socket) => {
-  console.log(`user ${socket.id} connected`);
+  const id = socket.id;
+  console.log(`user ${id} connected`);
 
   io.emit("team-added", teams);
   if (title) io.emit("title", title);
 
   socket.on("add-team", (team) => {
+    team.id = id;
     teams.push(team);
     io.emit("team-added", teams);
     console.log("New team added => ", teams);
@@ -64,6 +66,15 @@ io.on("connect", (socket) => {
     title = "";
     buzzes = [];
     io.emit("raz");
+  });
+  
+  socket.on("disconnect", () => {
+    let disconnectedTeam = "";
+    teams.find((o) => {
+      if (o.id === id) disconnectedTeam = o.name;
+    });
+    io.emit("remove-team", disconnectedTeam);
+    console.log(`team ${disconnectedTeam} has been disconnected`);
   })
 });
 
