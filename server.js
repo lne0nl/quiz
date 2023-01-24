@@ -72,6 +72,7 @@ io.on("connect", (socket) => {
     title = "";
     buzzes = [];
     io.emit("raz");
+    io.disconnectSockets();
   });
   
   socket.on("disconnect", () => {
