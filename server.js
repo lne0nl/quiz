@@ -77,9 +77,12 @@ io.on("connect", (socket) => {
         teamIndex = teams.indexOf(o);
       }
     });
-    teams.splice(teamIndex, 1);
-    io.emit("remove-team", disconnectedTeam);
-    console.log(`team ${disconnectedTeam} has been disconnected`);
+    console.log("disconnected team => ", disconnectedTeam);
+    if (disconnectedTeam) {
+      teams.splice(teamIndex, 1);
+      io.emit("remove-team", disconnectedTeam);
+      console.log(`team ${disconnectedTeam} has been disconnected`);
+    }
   })
 });
 
