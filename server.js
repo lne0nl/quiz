@@ -32,6 +32,9 @@ io.on("connect", (socket) => {
   });
 
   socket.on("buzz", (teamName) => {
+    teams.find((o) => {
+      if (o.name === teamName) o.active = true;
+    })
     if (!buzzes.includes(teamName)) buzzes.push(teamName);
     if (buzzes.length >= 1) io.emit("buzz-win", buzzes[0]);
     console.log(`l'équipe ${teamName} a buzzé !`)
@@ -39,6 +42,9 @@ io.on("connect", (socket) => {
 
   socket.on("raz-buzz", () => {
     buzzes = [];
+    teams.forEach((team) => {
+      team.active = false;
+    })
     io.emit("raz-buzz");
   });
 
@@ -77,7 +83,6 @@ io.on("connect", (socket) => {
         teamIndex = teams.indexOf(o);
       }
     });
-    console.log("disconnected team => ", disconnectedTeam);
     if (disconnectedTeam) {
       teams.splice(teamIndex, 1);
       io.emit("remove-team", disconnectedTeam);
