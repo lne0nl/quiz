@@ -139,6 +139,14 @@ io.on("connect", (socket) => {
     });
   });
 
+  socket.on("win", (quizID) => {
+    io.in(quizID).emit("win");
+  });
+
+  socket.on("lose", (quizID) => {
+    io.in(quizID).emit("lose");
+  });
+
   // socket.on("add-point", (teamName) => {
   //   teams.find((o) => {
   //     if (o.name === teamName) o.score += 1;
