@@ -96,6 +96,8 @@ io.on("connect", (socket) => {
     });
   });
 
+  socket.on("toggle-buzz", (quizID, showBuzz) => io.to(quizID).emit("toggle-buzz", showBuzz));
+
   socket.on("buzz", (teamName) => {
     teams.find((o) => {
       if (o.name === teamName) o.active = true;
