@@ -33,7 +33,6 @@ let buzzes = [];
 const quizes = [];
 
 io.on("connect", (socket) => {
-  const id = socket.id;
   // Create quiz room with client admin page.
   socket.on("create", (quiz) => {
     const quizID = quiz.id;
@@ -78,6 +77,8 @@ io.on("connect", (socket) => {
   });
 
   socket.on("add-team", (quizID, team, role) => {
+    socket.quizID = quizID;
+    socket.teamName = team.name;
     quizes.find((quiz) => {
       if (quiz.id === quizID) {
         quiz.teams.push(team);
@@ -149,13 +150,6 @@ io.on("connect", (socket) => {
     io.in(quizID).emit("lose");
   });
 
-  // socket.on("add-point", (teamName) => {
-  //   teams.find((o) => {
-  //     if (o.name === teamName) o.score += 1;
-  //   });
-  //   io.emit("add-point", teamName);
-  // });
-
   socket.on("quiz-name", (quizName) => {
     title = quizName;
     io.emit("quiz-name", quizName);
@@ -170,18 +164,22 @@ io.on("connect", (socket) => {
   });
 
   socket.on("disconnect", () => {
-    let disconnectedTeam = "";
-    let teamIndex = -1;
-    teams.find((o) => {
-      if (o.id === id) {
-        disconnectedTeam = o.name;
-        teamIndex = teams.indexOf(o);
-      }
-    });
-    if (disconnectedTeam) {
-      teams.splice(teamIndex, 1);
-      io.emit("remove-team", disconnectedTeam);
-      console.log(`team ${disconnectedTeam} has been disconnected`);
+    if (socket.quizID && socket.teamName) {
+      let disconnectedTeam = {};
+      quizes.find((quiz) => {
+        let teamIndex = -1;
+        if (quiz.id === socket.quizID) {
+          quiz.teams.find((team) => {
+            if (team.name === socket.teamName) {
+              teamIndex = quiz.teams.indexOf(team);
+              disconnectedTeam = team;
+            }
+          });
+        }
+        quiz.teams.splice(teamIndex, 1);
+      });
+      io.to(socket.quizID).emit("remove-team", disconnectedTeam.name);
+      console.log(`team ${disconnectedTeam.name} has been disconnected`);
     }
   });
 });
