@@ -31,7 +31,6 @@ const port = process.env.PORT || 8080;
 const quizes = [];
 
 io.on("connect", (socket) => {
-  // Create quiz room with client admin page.
   socket.on("create", (quiz) => {
     const quizID = quiz.id;
     const quizName = quiz.name;
@@ -102,10 +101,10 @@ io.on("connect", (socket) => {
 
   socket.on("buzz", (teamName, quizID) => {
     io.in(quizID).emit("buzz-win", teamName);
-    console.log(`l'équipe ${teamName} a buzzé !`);
+    console.log(`l'équipe ${teamName} a buzzé sur le quiz ${quizID}`);
   });
 
-  socket.on("raz-buzz", (quizID) => (io.in(quizID).emit("raz-buzz")));
+  socket.on("raz-buzz", (quizID) => io.in(quizID).emit("raz-buzz"));
 
   socket.on("add-point", (quizID, teamName) => {
     quizes.find((quiz) => {
@@ -133,13 +132,9 @@ io.on("connect", (socket) => {
     });
   });
 
-  socket.on("win", (quizID) => {
-    io.in(quizID).emit("win");
-  });
+  socket.on("win", (quizID) => io.in(quizID).emit("win"));
 
-  socket.on("lose", (quizID) => {
-    io.in(quizID).emit("lose");
-  });
+  socket.on("lose", (quizID) => io.in(quizID).emit("lose"));
 
   socket.on("raz", (quizID) => {
     console.log("quizID => ", quizID);
@@ -147,13 +142,11 @@ io.on("connect", (socket) => {
     let indexOfQuiz = -1;
     quizes.find((quiz) => {
       console.log("quiz.id =>", quiz.id);
-      if (quiz.id === quizID) {
-        indexOfQuiz = quizes.indexOf(quiz);
-        // quizes.splice(quizes.indexOf(quiz), 1);
-      }
+      if (quiz.id === quizID) indexOfQuiz = quizes.indexOf(quiz);
     });
     quizes.splice(indexOfQuiz, 1);
     io.in(quizID).disconnectSockets();
+    console.log(`Le quiz ${quizID} a été supprimé.`);
   });
 
   socket.on("disconnect", () => {
