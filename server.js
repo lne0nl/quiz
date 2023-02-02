@@ -48,6 +48,8 @@ io.on("connect", (socket) => {
   socket.on("display-quiz", async (quizID, URL) => {
     const quizCode = await generateQR(URL);
     socket.join(quizID);
+    console.log(quizID);
+    console.log(quizes);
     quizes.find((quiz) => {
       if (quiz.id === quizID) {
         io.in(quizID).emit("quiz-infos", quiz, quizCode);
@@ -58,10 +60,9 @@ io.on("connect", (socket) => {
   socket.on("check-quiz", (quizID) => {
     socket.join(quizID);
 
-    
     if (!quizes.length) io.in(quizID).emit("check-quiz");
     else {
-      const quizExists = quizes.filter(quiz => quiz.id === quizID);
+      const quizExists = quizes.filter((quiz) => quiz.id === quizID);
       if (quizExists.length) io.in(quizID).emit("check-quiz", quizExists[0]);
       else io.in(quizID).emit("check-quiz");
     }
@@ -97,7 +98,9 @@ io.on("connect", (socket) => {
     });
   });
 
-  socket.on("toggle-buzz", (quizID, showBuzz) => io.to(quizID).emit("toggle-buzz", showBuzz));
+  socket.on("toggle-buzz", (quizID, showBuzz) =>
+    io.to(quizID).emit("toggle-buzz", showBuzz)
+  );
 
   socket.on("buzz", (teamName) => {
     teams.find((o) => {
@@ -125,7 +128,7 @@ io.on("connect", (socket) => {
             io.in(quizID).emit("add-point", quiz.teams);
           }
         });
-      };
+      }
     });
   });
 
@@ -155,12 +158,13 @@ io.on("connect", (socket) => {
     io.emit("quiz-name", quizName);
   });
 
-  socket.on("raz", () => {
-    teams = [];
-    title = "";
-    buzzes = [];
-    io.emit("raz");
-    io.disconnectSockets();
+  socket.on("raz", (quizID) => {
+    io.in(quizID).disconnectSockets();
+    quizes.find((quiz) => {
+      if (quiz.id === quizID) {
+        quizes.splice(quizes.indexOf(quiz), 1);
+      }
+    });
   });
 
   socket.on("disconnect", () => {
