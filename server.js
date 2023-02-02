@@ -45,8 +45,6 @@ io.on("connect", (socket) => {
   socket.on("display-quiz", async (quizID, URL) => {
     const quizCode = await generateQR(URL);
     socket.join(quizID);
-    console.log(quizID);
-    console.log(quizes);
     quizes.find((quiz) => {
       if (quiz.id === quizID) {
         io.in(quizID).emit("quiz-infos", quiz, quizCode);
