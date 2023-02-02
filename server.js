@@ -28,8 +28,6 @@ const generateQR = async (text) => {
 };
 
 const port = process.env.PORT || 8080;
-let teams = [];
-let buzzes = [];
 const quizes = [];
 
 io.on("connect", (socket) => {
@@ -102,22 +100,12 @@ io.on("connect", (socket) => {
     io.to(quizID).emit("toggle-buzz", showBuzz)
   );
 
-  socket.on("buzz", (teamName) => {
-    teams.find((o) => {
-      if (o.name === teamName) o.active = true;
-    });
-    if (!buzzes.includes(teamName)) buzzes.push(teamName);
-    if (buzzes.length >= 1) io.emit("buzz-win", buzzes[0]);
+  socket.on("buzz", (teamName, quizID) => {
+    io.in(quizID).emit("buzz-win", teamName);
     console.log(`l'équipe ${teamName} a buzzé !`);
   });
 
-  socket.on("raz-buzz", () => {
-    buzzes = [];
-    teams.forEach((team) => {
-      team.active = false;
-    });
-    io.emit("raz-buzz");
-  });
+  socket.on("raz-buzz", (quizID) => (io.in(quizID).emit("raz-buzz")));
 
   socket.on("add-point", (quizID, teamName) => {
     quizes.find((quiz) => {
@@ -153,18 +141,19 @@ io.on("connect", (socket) => {
     io.in(quizID).emit("lose");
   });
 
-  socket.on("quiz-name", (quizName) => {
-    title = quizName;
-    io.emit("quiz-name", quizName);
-  });
-
   socket.on("raz", (quizID) => {
-    io.in(quizID).disconnectSockets();
+    console.log("quizID => ", quizID);
+    console.table(quizes);
+    let indexOfQuiz = -1;
     quizes.find((quiz) => {
+      console.log("quiz.id =>", quiz.id);
       if (quiz.id === quizID) {
-        quizes.splice(quizes.indexOf(quiz), 1);
+        indexOfQuiz = quizes.indexOf(quiz);
+        // quizes.splice(quizes.indexOf(quiz), 1);
       }
     });
+    quizes.splice(indexOfQuiz, 1);
+    io.in(quizID).disconnectSockets();
   });
 
   socket.on("disconnect", () => {
