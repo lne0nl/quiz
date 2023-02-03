@@ -13,6 +13,11 @@ const io = new Server(server, {
   },
 });
 
+/**
+ * 
+ * @param {*} text 
+ * @returns 
+ */
 const generateQR = async (text) => {
   try {
     return await QRCode.toDataURL(text, {
@@ -97,9 +102,14 @@ io.on("connect", (socket) => {
     io.to(quizID).emit("toggle-buzz", showBuzz)
   );
 
-  socket.on("buzz", (teamName, quizID) => {
-    io.in(quizID).emit("buzz-win", teamName);
-    console.log(`l'équipe ${teamName} a buzzé sur le quiz ${quizID}`);
+  socket.on("buzz", (teamID, quizID) => {
+    const firstTeams = [];
+    const currentQuiz = quizes.filter((quiz) => quiz.id === quizID);
+    const winningTeam = currentQuiz[0].teams.filter((team) => team.id === teamID);
+
+    firstTeams.push(winningTeam[0]);
+    io.in(quizID).emit("buzz-win", firstTeams[0]);
+    console.log(`l'équipe ${firstTeams[0].name} a buzzé sur le quiz ${quizID}`);
   });
 
   socket.on("raz-buzz", (quizID) => io.in(quizID).emit("raz-buzz"));
@@ -135,11 +145,9 @@ io.on("connect", (socket) => {
   socket.on("lose", (quizID) => io.in(quizID).emit("lose"));
 
   socket.on("raz", (quizID) => {
-    console.log("quizID => ", quizID);
     console.table(quizes);
     let indexOfQuiz = -1;
     quizes.find((quiz) => {
-      console.log("quiz.id =>", quiz.id);
       if (quiz.id === quizID) indexOfQuiz = quizes.indexOf(quiz);
     });
     quizes.splice(indexOfQuiz, 1);
