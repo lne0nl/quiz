@@ -17,11 +17,6 @@ const io = new Server(server, {
 const port = process.env.PORT || 8080;
 const quizes: Quiz[] = [];
 
-/**
- * 
- * @param {*} text 
- * @returns 
- */
 const generateQR = async (text: string) => {
   try {
     return await QRCode.toDataURL(text, {
@@ -31,8 +26,8 @@ const generateQR = async (text: string) => {
         light: "#ffffff",
       },
     });
-  } catch (err) {
-    console.error(err);
+  } catch (e) {
+    console.log(e);
   }
 };
 
@@ -100,14 +95,14 @@ io.on("connect", (socket: QuizSocket) => {
     });
   });
 
-  socket.on("toggle-buzz", (quizID: string, showBuzz: boolean) =>
-    io.to(quizID).emit("toggle-buzz", showBuzz)
-  );
+  socket.on("toggle-buzz", (quizID: string, showBuzz: boolean) => io.to(quizID).emit("toggle-buzz", showBuzz));
 
   socket.on("buzz", (teamID: string, quizID: string) => {
     const firstTeams: Team[] = [];
     const currentQuiz = quizes.filter((quiz) => quiz.id === quizID);
-    const winningTeam = currentQuiz[0].teams.filter((team) => team.id === teamID);
+    const winningTeam = currentQuiz[0].teams.filter(
+      (team) => team.id === teamID,
+    );
 
     firstTeams.push(winningTeam[0]);
     io.in(quizID).emit("buzz-win", firstTeams[0]);
@@ -123,6 +118,7 @@ io.on("connect", (socket: QuizSocket) => {
           if (team.name === teamName) {
             team.score += 1;
             io.in(quizID).emit("add-point", quiz.teams);
+            console.log(`L'équipe ${team.name} marque un point !`);
           }
         });
       }
