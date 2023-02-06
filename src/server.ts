@@ -17,19 +17,14 @@ const io = new Server(server, {
 const port = process.env.PORT || 8080;
 const quizes: Quiz[] = [];
 
-const generateQR = async (text: string) => {
-  try {
-    return await QRCode.toDataURL(text, {
-      width: 500,
-      color: {
-        dark: "#eb213a",
-        light: "#ffffff",
-      },
-    });
-  } catch (e) {
-    console.log(e);
-  }
-};
+const generateQR = async (text: string) =>
+  QRCode.toDataURL(text, {
+    width: 500,
+    color: {
+      dark: "#eb213a",
+      light: "#ffffff",
+    },
+  });
 
 io.on("connect", (socket: QuizSocket) => {
   socket.on("create", (quiz: Quiz) => {
