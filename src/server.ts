@@ -3,6 +3,8 @@ import http from "http";
 import "dotenv/config";
 import { Server } from "socket.io";
 import QRCode from "qrcode";
+import { QuizSocket } from "./interfaces/QuizSocket";
+import { Quiz, Team } from "./types";
 
 const app = express();
 const server = http.createServer(app);
@@ -12,13 +14,15 @@ const io = new Server(server, {
     methods: ["GET", "POST"],
   },
 });
+const port = process.env.PORT || 8080;
+const quizes: Quiz[] = [];
 
 /**
  * 
  * @param {*} text 
  * @returns 
  */
-const generateQR = async (text) => {
+const generateQR = async (text: string) => {
   try {
     return await QRCode.toDataURL(text, {
       width: 500,
@@ -32,13 +36,11 @@ const generateQR = async (text) => {
   }
 };
 
-const port = process.env.PORT || 8080;
-const quizes = [];
-
-io.on("connect", (socket) => {
-  socket.on("create", (quiz) => {
+io.on("connect", (socket: QuizSocket) => {
+  socket.on("create", (quiz: Quiz) => {
     const quizID = quiz.id;
     const quizName = quiz.name;
+
     quiz.teams = [];
     quiz.started = false;
     socket.join(quizID);
@@ -47,7 +49,7 @@ io.on("connect", (socket) => {
     console.table(quizes);
   });
 
-  socket.on("display-quiz", async (quizID, URL) => {
+  socket.on("display-quiz", async (quizID: string, URL: string) => {
     const quizCode = await generateQR(URL);
     socket.join(quizID);
     quizes.find((quiz) => {
@@ -57,7 +59,7 @@ io.on("connect", (socket) => {
     });
   });
 
-  socket.on("check-quiz", (quizID) => {
+  socket.on("check-quiz", (quizID: string) => {
     socket.join(quizID);
 
     if (!quizes.length) io.in(quizID).emit("check-quiz");
@@ -68,7 +70,7 @@ io.on("connect", (socket) => {
     }
   });
 
-  socket.on("start-quiz", (quizID, quizName) => {
+  socket.on("start-quiz", (quizID: string, quizName: string) => {
     console.log(`Quiz "${quizName}" has started`);
     quizes.find((quiz) => {
       if (quiz.id === quizID) quiz.started = true;
@@ -77,7 +79,7 @@ io.on("connect", (socket) => {
     io.to(quizID).emit("quiz-started");
   });
 
-  socket.on("add-team", (quizID, team, role) => {
+  socket.on("add-team", (quizID, team: Team, role) => {
     socket.quizID = quizID;
     socket.teamName = team.name;
     quizes.find((quiz) => {
@@ -90,7 +92,7 @@ io.on("connect", (socket) => {
     });
   });
 
-  socket.on("show-code", (quizID) => {
+  socket.on("show-code", (quizID: string) => {
     quizes.find((quiz) => {
       if (quiz.id === quizID) {
         io.to(quizID).emit("show-code");
@@ -98,12 +100,12 @@ io.on("connect", (socket) => {
     });
   });
 
-  socket.on("toggle-buzz", (quizID, showBuzz) =>
+  socket.on("toggle-buzz", (quizID: string, showBuzz: boolean) =>
     io.to(quizID).emit("toggle-buzz", showBuzz)
   );
 
-  socket.on("buzz", (teamID, quizID) => {
-    const firstTeams = [];
+  socket.on("buzz", (teamID: string, quizID: string) => {
+    const firstTeams: Team[] = [];
     const currentQuiz = quizes.filter((quiz) => quiz.id === quizID);
     const winningTeam = currentQuiz[0].teams.filter((team) => team.id === teamID);
 
@@ -112,9 +114,9 @@ io.on("connect", (socket) => {
     console.log(`l'équipe ${firstTeams[0].name} a buzzé sur le quiz ${quizID}`);
   });
 
-  socket.on("raz-buzz", (quizID) => io.in(quizID).emit("raz-buzz"));
+  socket.on("raz-buzz", (quizID: string) => io.in(quizID).emit("raz-buzz"));
 
-  socket.on("add-point", (quizID, teamName) => {
+  socket.on("add-point", (quizID: string, teamName: string) => {
     quizes.find((quiz) => {
       if (quiz.id === quizID) {
         quiz.teams.find((team) => {
@@ -127,7 +129,7 @@ io.on("connect", (socket) => {
     });
   });
 
-  socket.on("remove-point", (quizID, teamName) => {
+  socket.on("remove-point", (quizID: string, teamName: string) => {
     quizes.find((quiz) => {
       if (quiz.id === quizID) {
         quiz.teams.find((team) => {
@@ -140,11 +142,11 @@ io.on("connect", (socket) => {
     });
   });
 
-  socket.on("win", (quizID) => io.in(quizID).emit("win"));
+  socket.on("win", (quizID: string) => io.in(quizID).emit("win"));
 
-  socket.on("lose", (quizID) => io.in(quizID).emit("lose"));
+  socket.on("lose", (quizID: string) => io.in(quizID).emit("lose"));
 
-  socket.on("raz", (quizID) => {
+  socket.on("raz", (quizID: string) => {
     console.table(quizes);
     let indexOfQuiz = -1;
     quizes.find((quiz) => {
@@ -157,7 +159,12 @@ io.on("connect", (socket) => {
 
   socket.on("disconnect", () => {
     if (socket.quizID && socket.teamName) {
-      let disconnectedTeam = {};
+      let disconnectedTeam: Team = {
+        id: "",
+        name: "",
+        score: 0,
+        active: false,
+      };
       quizes.find((quiz) => {
         let teamIndex = -1;
         if (quiz.id === socket.quizID) {
