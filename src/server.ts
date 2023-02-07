@@ -49,13 +49,13 @@ io.on("connect", (socket: QuizSocket) => {
     });
   });
 
-  socket.on("check-quiz", (quizID: string) => {
+  socket.on("check-quiz", (quizID: string, fromDisplay: boolean) => {
     socket.join(quizID);
 
     if (!quizes.length) io.in(quizID).emit("check-quiz");
     else {
       const quizExists = quizes.filter((quiz) => quiz.id === quizID);
-      if (quizExists.length) io.in(quizID).emit("check-quiz", quizExists[0]);
+      if (quizExists.length) io.in(quizID).emit("check-quiz", quizExists[0], fromDisplay);
       else io.in(quizID).emit("check-quiz");
     }
   });
@@ -90,15 +90,18 @@ io.on("connect", (socket: QuizSocket) => {
     });
   });
 
-  socket.on("toggle-buzz", (quizID: string, showBuzz: boolean) => io.to(quizID).emit("toggle-buzz", showBuzz));
+  socket.on("toggle-buzz", (quizID: string, showBuzz: boolean) =>
+    io.to(quizID).emit("toggle-buzz", showBuzz)
+  );
 
   socket.on("buzz", (teamID: string, quizID: string) => {
     const firstTeams: Team[] = [];
     const currentQuiz = quizes.filter((quiz) => quiz.id === quizID);
     const winningTeam = currentQuiz[0].teams.filter(
-      (team) => team.id === teamID,
+      (team) => team.id === teamID
     );
-
+    
+    winningTeam[0].active = true;
     firstTeams.push(winningTeam[0]);
     io.in(quizID).emit("buzz-win", firstTeams[0]);
     console.log(`l'équipe ${firstTeams[0].name} a buzzé sur le quiz ${quizID}`);
