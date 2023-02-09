@@ -1,5 +1,5 @@
 {
-  "name": "quiz",
+  "name": "zeniquiz",
   "version": "0.5",
   "main": "src/server.ts",
   "repository": "git@github.com:lne0nl/quiz.git",
@@ -10,14 +10,16 @@
     "start": "tsc && node build/server.js",
     "dev": "nodemon src/server.ts",
     "build": "tsc",
-    "lint": "eslint . --ext .ts"
+    "lint": "eslint . --ext .ts",
+    "test": "env TS_NODE_COMPILER_OPTIONS='{\"module\": \"commonjs\" }' mocha -r ts-node/register 'src/tests/**/*.ts'"
   },
   "dependencies": {
     "dotenv": "^16.0.3",
     "express": "^4.18.2",
     "node-fetch": "^3.3.0",
     "qrcode": "^1.5.1",
-    "socket.io": "^4.5.4"
+    "socket.io": "^4.5.4",
+    "socket.io-client": "^4.6.0"
   },
   "devDependencies": {
     "@types/express": "^4.17.17",

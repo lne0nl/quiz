@@ -68,7 +68,6 @@ export const addTeam = (
 export const showCode = (io: Server, quizID: string) =>
   io.to(quizID).emit("show-code");
 
-// à tester à la fin.
 export const toggleBuzz = (io: Server, quizID: string, disableBuzz: boolean) =>
   io.to(quizID).emit("toggle-buzz", disableBuzz);
 
@@ -83,8 +82,10 @@ export const buzz = (io: Server, teamID: string, quizID: string) => {
   console.log(`l'équipe ${buzzingTeams[0].name} a buzzé sur le quiz ${quizID}`);
 };
 
-export const razBuzz = (io: Server, quizID: string) =>
+export const razBuzz = (io: Server, quizID: string) => {
+  getCurrentQuiz(quizes, quizID).teams.forEach((team) => team.active = false);
   io.in(quizID).emit("raz-buzz");
+}
 
 export const addPoint = (io: Server, quizID: string, teamName: string) => {
   const currentQuiz = getCurrentQuiz(quizes, quizID);
